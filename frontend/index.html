@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OptiExport 3D - Dashboard</title>
+
+    <!-- Estilos -->
+    <link rel="stylesheet" href="/static/styles.css">
+
+    <!-- Fuentes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Three.js Core & OrbitControls -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">O3</div>
+            OptiExport 3D
+        </div>
+        <nav>
+            <ul class="nav-menu">
+                <li class="active" data-section="dashboard">Dashboard</li>
+                <li data-section="history">Historial</li>
+                <li data-section="config">Configuración</li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container" id="mainContainer">
+        <!-- Sidebar Left -->
+        <aside class="sidebar-left">
+            <!-- Container Selector -->
+            <div class="card">
+                <h2 class="card-title">Contenedores</h2>
+
+                <!-- LISTA DE CONTENEDORES (Aquí se inyectan los botones) -->
+                <div class="container-selector" id="containerSelector">
+                    <!-- Se llena dinámicamente -->
+                </div>
+
+                <!-- CONTROLES DE PAGINACIÓN -->
+                <div class="pagination-controls" id="paginationControls" style="display: none;">
+                    <button id="btnPrev" onclick="changePage(-1)" title="Anterior">❮</button>
+                    <span id="pageIndicator" class="page-indicator">-- / --</span>
+                    <button id="btnNext" onclick="changePage(1)" title="Siguiente">❯</button>
+                </div>
+
+                <div class="empty-state" id="emptyContainers">
+                    No hay contenedores optimizados
+                </div>
+            </div>
+
+            <!-- Container Details -->
+            <div class="card" id="containerDetails">
+                <h2 class="card-title">Detalles del Contenedor</h2>
+                <div class="empty-state" id="emptyDetails">
+                    Selecciona un contenedor para ver sus detalles
+                </div>
+                <div id="detailsContent" style="display: none;">
+                    <div class="detail-item">
+                        <span class="detail-label">Tipo de Contenedor</span>
+                        <span class="detail-value" id="containerType">--</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Destino</span>
+                        <span class="detail-value" id="containerDest">--</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Productos Incluidos</span>
+                        <span class="detail-value" id="containerProducts">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Global Summary -->
+            <div class="card">
+                <h2 class="card-title">Resumen Global</h2>
+                <div class="summary-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">Contenedores usados</span>
+                        <span class="stat-value" id="globalContainers">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Volumen Total</span>
+                        <span class="stat-value" id="globalVolume">--</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center Panel - 3D Viewer -->
+        <main class="viewer-container">
+            <div class="card viewer-card">
+                <h2 class="card-title">Visualización 3D</h2>
+                <div class="viewer-content">
+                    <!-- Placeholder -->
+                    <div id="viewerPlaceholder">
+                        <div class="viewer-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                            </svg>
+                        </div>
+                        <h3 class="viewer-title">Visualización 3D</h3>
+                        <p class="viewer-subtitle">Procesa los datos para ver el gemelo digital.</p>
+
+                        <button class="process-btn" onclick="processData()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            Procesar Optimización
+                        </button>
+                    </div>
+
+                    <!-- Canvas 3D -->
+                    <div id="viewer3D" style="display: none;"></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Sidebar Right -->
+        <aside class="sidebar-right">
+            <!-- Container Stats -->
+            <div class="card">
+                <h2 class="card-title">Estadísticas del Contenedor</h2>
+                <div class="stat-item">
+                    <span class="stat-label">Ocupación del contenedor</span>
+                    <span class="stat-value" id="containerOccupancy">--</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Espacio utilizado</span>
+                    <span class="stat-value" id="containerSpace">-- m³</span>
+                </div>
+            </div>
+
+            <!-- Alerts -->
+            <div class="card">
+                <h2 class="card-title">Alertas y Compatibilidad</h2>
+                <div class="alert-content" id="alertBox">
+                    <div class="alert-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <p class="alert-text">Sistema listo. Sin alertas.</p>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p class="footer-text">© 2025 OptiExport 3D. Optimización inteligente de contenedores.</p>
+        </div>
+    </footer>
+
+    <script src="/static/script.js"></script>
+</body>
+
+</html>
