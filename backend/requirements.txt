@@ -1,4 +1,4 @@
 fastapi
 uvicorn
+pandas
 pydantic
-neo4j
