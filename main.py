@@ -13,7 +13,7 @@ import math
 
 # --- CONFIGURACIÓN PATHS ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-FRONTEND_DIR = os.path.join(BASE_DIR, "../frontend")
+FRONTEND_DIR = os.path.join(BASE_DIR, "frontend") # ¡Adiós a los dos puntos!
 CSV_PATH = os.path.join(BASE_DIR, "DATASET_OptiExport_Mejorado.csv")
 
 # --- CARGA DE DATOS (REEMPLAZA A NEO4J) ---
@@ -312,7 +312,14 @@ def optimize_load(order: OrderRequest):
     
     return limit_result
 
+# 1. Definir la ruta correcta (ahora que main.py está en la raíz)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
+
+# 2. Montar los archivos estáticos
 if os.path.exists(FRONTEND_DIR):
+    # Nota: Asegúrate de que en tu index.html las rutas a scripts/css 
+    # apunten a /static/...
     app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 
 @app.get("/")
@@ -320,7 +327,20 @@ async def read_root():
     index_file = os.path.join(FRONTEND_DIR, "index.html")
     if os.path.exists(index_file):
         return FileResponse(index_file)
-    return {"error": f"Archivo index.html no encontrado en {FRONTEND_DIR}"}
+    
+    # --- MODO DETECTIVE CORREGIDO ---
+    # (Ya no ponemos 'import os' aquí porque ya está al inicio de tu archivo)
+    archivos_raiz = os.listdir(BASE_DIR)
+    existe_carpeta = os.path.exists(FRONTEND_DIR)
+    archivos_front = os.listdir(FRONTEND_DIR) if existe_carpeta else []
+    
+    return {
+        "error": "No encuentro el index.html",
+        "1_ruta_que_busque": index_file,
+        "2_archivos_en_la_raiz": archivos_raiz,
+        "3_existe_la_carpeta_frontend": existe_carpeta,
+        "4_archivos_dentro_de_frontend": archivos_front
+    }
 
 if __name__ == "__main__":
     import uvicorn
